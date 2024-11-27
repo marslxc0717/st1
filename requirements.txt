@@ -1,0 +1,13 @@
+asposestorage
+chains
+configs
+matplotlib
+nltk
+numpy
+pandas
+scikit_learn
+scipy
+seaborn
+streamlit
+streamlit_chatbox
+torch
