@@ -1,6 +1,3 @@
-asposestorage
-chains
-configs
 matplotlib
 nltk
 numpy
