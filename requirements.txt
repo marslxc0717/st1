@@ -1,3 +1,6 @@
+asposestorage
+chains
+configs
 matplotlib
 nltk
 numpy
@@ -7,3 +10,4 @@ scipy
 seaborn
 streamlit
 streamlit_chatbox
+torch
