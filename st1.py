@@ -16,6 +16,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 # 设置中文字体
 plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -99,6 +100,13 @@ if option == "训练模型":
                 st.write(f"训练集 R²: {r2_score(y_train, train_pred):.4f}")
                 st.write(f"测试集 R²: {r2_score(y_test, test_pred):.4f}")
 
+                # 保存模型到桌面
+                desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+                model_filename = os.path.join(desktop_path, f"{model_name}_model.pkl")
+                with open(model_filename, "wb") as file:
+                    pickle.dump(model, file)
+                st.success(f"模型已保存至桌面: {model_filename}")
+
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
                 ax[0].scatter(y_train, train_pred, alpha=0.7)
                 ax[0].plot([min(y_train), max(y_train)], [min(y_train), max(y_train)], color='red', linestyle='--')
@@ -141,7 +149,7 @@ elif option == "数据分析":
 
                 labels = model.fit_predict(X_scaled)
                 df["Cluster"] = labels
-                st.write("Clustering Results:", df)
+                st.write("聚类结果：", df)
 
                 plt.figure(figsize=(8, 6))
                 plt.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, cmap="viridis", s=50)
@@ -157,7 +165,7 @@ elif option == "数据分析":
 
             if selected_cols:
                 correlation_matrix = df[selected_cols].corr(method=method)
-                st.write(f"{correlation_type} Matrix:", correlation_matrix)
+                st.write(f"{correlation_type} 矩阵：", correlation_matrix)
 
                 fig, ax = plt.subplots(figsize=(10, 8))
                 sns.heatmap(
@@ -171,8 +179,8 @@ elif option == "数据分析":
                 st.pyplot(fig)
 
         elif analysis_option == "灰色关联分析":
-            target_col = st.selectbox("Select Target Variable", df.columns)
-            feature_cols = st.multiselect("Select Feature Variables", [col for col in df.columns if col != target_col])
+            target_col = st.selectbox("选择目标变量", df.columns)
+            feature_cols = st.multiselect("选择特征变量", [col for col in df.columns if col != target_col])
             if target_col and feature_cols:
                 X = df[feature_cols]
                 y = df[target_col]
@@ -180,14 +188,14 @@ elif option == "数据分析":
                 normalized_y = (y - y.min()) / (y.max() - y.min())
                 grey_relation = normalized_X.apply(lambda x: 1 - abs(x - normalized_y).sum() / len(normalized_y))
                 grey_relation_df = pd.DataFrame({
-                    "Feature": feature_cols,
-                    "Grey Relation": grey_relation.values
-                }).sort_values(by="Grey Relation", ascending=False)
+                    "特征": feature_cols,
+                    "灰色关联度": grey_relation.values
+                }).sort_values(by="灰色关联度", ascending=False)
 
-                st.write("Grey Relation Analysis:", grey_relation_df)
+                st.write("灰色关联分析：", grey_relation_df)
 
                 fig, ax = plt.subplots()
-                sns.barplot(x="Grey Relation", y="Feature", data=grey_relation_df, ax=ax)
+                sns.barplot(x="灰色关联度", y="特征", data=grey_relation_df, ax=ax)
                 ax.set_title("Grey Relation Analysis Results")
                 ax.set_xlabel("Grey Relation Coefficient")
                 ax.set_ylabel("Features")
@@ -204,14 +212,14 @@ elif option == "数据分析":
                 model.fit(X, y)
                 importance = model.feature_importances_
                 importance_df = pd.DataFrame({
-                    "Feature": feature_cols,
-                    "Importance": importance
-                }).sort_values(by="Importance", ascending=False)
+                    "特征": feature_cols,
+                    "重要性": importance
+                }).sort_values(by="重要性", ascending=False)
 
-                st.write("Feature Importance:", importance_df)
+                st.write("特征重要性：", importance_df)
 
                 fig, ax = plt.subplots()
-                sns.barplot(x="Importance", y="Feature", data=importance_df, ax=ax)
+                sns.barplot(x="重要性", y="特征", data=importance_df, ax=ax)
                 ax.set_title("Feature Importance (Random Forest)")
                 ax.set_xlabel("Importance Score")
                 ax.set_ylabel("Features")
@@ -245,9 +253,9 @@ elif option == "数据分析":
 
                 # 绘图
                 fig, ax = plt.subplots(figsize=(8, 6))
-                ax.scatter(X, y, label="实际值", alpha=0.7)
-                ax.plot(np.sort(X), polynomial(np.sort(X)), color="red", label="拟合曲线")
-                ax.set_title(f"{degree} 阶多项式拟合")
+                ax.scatter(X, y, label="Actual Values", alpha=0.7)
+                ax.plot(np.sort(X), polynomial(np.sort(X)), color="red", label="Fitted Curve")
+                ax.set_title(f"{degree}-Degree Polynomial Fit")
                 ax.set_xlabel(x_col)
                 ax.set_ylabel(y_col)
                 ax.legend()
