@@ -100,12 +100,14 @@ if option == "训练模型":
                 st.write(f"训练集 R²: {r2_score(y_train, train_pred):.4f}")
                 st.write(f"测试集 R²: {r2_score(y_test, test_pred):.4f}")
 
-                # 保存模型到桌面
-                desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-                model_filename = os.path.join(desktop_path, f"{model_name}_model.pkl")
-                with open(model_filename, "wb") as file:
-                    pickle.dump(model, file)
-                st.success(f"模型已保存至桌面: {model_filename}")
+                # 自动保存模型到当前工作目录
+                model_filename = f"{model_name}_model.pkl"
+                try:
+                    with open(model_filename, "wb") as file:
+                        pickle.dump(model, file)
+                    st.success(f"模型已自动保存为: {model_filename}")
+                except Exception as e:
+                    st.error(f"模型保存失败，错误信息: {e}")
 
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
                 ax[0].scatter(y_train, train_pred, alpha=0.7)
@@ -121,6 +123,35 @@ if option == "训练模型":
                 ax[1].set_ylabel("Predicted Values")
 
                 st.pyplot(fig)
+
+elif option == "预测结果":
+    st.title("模型预测结果")
+    model_file = st.file_uploader("上传训练好的模型 (.pkl 文件)", type=["pkl"])
+    data_file = st.file_uploader("上传待预测的数据集 (Excel 格式)", type=["xlsx", "xls"])
+
+    if model_file and data_file:
+        model = pickle.load(model_file)
+        df = pd.read_excel(data_file)
+        st.write("待预测数据集预览：", df.head())
+
+        predict_features = st.multiselect("选择用于预测的特征列", df.columns)
+        if predict_features:
+            X = df[predict_features]
+            predictions = model.predict(X)
+
+            df["Predictions"] = predictions
+            st.write("预测结果：", df)
+
+            # 下载结果
+            output_file = "predictions.xlsx"
+            df.to_excel(output_file, index=False)
+            with open(output_file, "rb") as f:
+                st.download_button(
+                    label="下载预测结果",
+                    data=f,
+                    file_name=output_file,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 
 elif option == "数据分析":
     st.title("数据分析工具")
@@ -153,7 +184,7 @@ elif option == "数据分析":
 
                 plt.figure(figsize=(8, 6))
                 plt.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, cmap="viridis", s=50)
-                plt.title("Cluster Distribution (PCA)", fontsize=14)
+                plt.title("Cluster Distribution (PCA)")
                 plt.xlabel("PCA Component 1")
                 plt.ylabel("PCA Component 2")
                 st.pyplot(plt)
@@ -175,7 +206,7 @@ elif option == "数据分析":
                     cmap="coolwarm",
                     ax=ax
                 )
-                ax.set_title(f"{correlation_type} Heatmap", fontsize=14)
+                ax.set_title(f"{correlation_type} Heatmap")
                 st.pyplot(fig)
 
         elif analysis_option == "灰色关联分析":
@@ -188,14 +219,14 @@ elif option == "数据分析":
                 normalized_y = (y - y.min()) / (y.max() - y.min())
                 grey_relation = normalized_X.apply(lambda x: 1 - abs(x - normalized_y).sum() / len(normalized_y))
                 grey_relation_df = pd.DataFrame({
-                    "特征": feature_cols,
-                    "灰色关联度": grey_relation.values
-                }).sort_values(by="灰色关联度", ascending=False)
+                    "Feature": feature_cols,
+                    "Grey Relation": grey_relation.values
+                }).sort_values(by="Grey Relation", ascending=False)
 
                 st.write("灰色关联分析：", grey_relation_df)
 
                 fig, ax = plt.subplots()
-                sns.barplot(x="灰色关联度", y="特征", data=grey_relation_df, ax=ax)
+                sns.barplot(x="Grey Relation", y="Feature", data=grey_relation_df, ax=ax)
                 ax.set_title("Grey Relation Analysis Results")
                 ax.set_xlabel("Grey Relation Coefficient")
                 ax.set_ylabel("Features")
@@ -212,14 +243,14 @@ elif option == "数据分析":
                 model.fit(X, y)
                 importance = model.feature_importances_
                 importance_df = pd.DataFrame({
-                    "特征": feature_cols,
-                    "重要性": importance
-                }).sort_values(by="重要性", ascending=False)
+                    "Feature": feature_cols,
+                    "Importance": importance
+                }).sort_values(by="Importance", ascending=False)
 
                 st.write("特征重要性：", importance_df)
 
                 fig, ax = plt.subplots()
-                sns.barplot(x="重要性", y="特征", data=importance_df, ax=ax)
+                sns.barplot(x="Importance", y="Feature", data=importance_df, ax=ax)
                 ax.set_title("Feature Importance (Random Forest)")
                 ax.set_xlabel("Importance Score")
                 ax.set_ylabel("Features")
