@@ -16,7 +16,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os
+import io
 
 # 设置中文字体
 plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -100,14 +100,16 @@ if option == "训练模型":
                 st.write(f"训练集 R²: {r2_score(y_train, train_pred):.4f}")
                 st.write(f"测试集 R²: {r2_score(y_test, test_pred):.4f}")
 
-                # 自动保存模型到当前工作目录
-                model_filename = f"{model_name}_model.pkl"
-                try:
-                    with open(model_filename, "wb") as file:
-                        pickle.dump(model, file)
-                    st.success(f"模型已自动保存为: {model_filename}")
-                except Exception as e:
-                    st.error(f"模型保存失败，错误信息: {e}")
+                # 保存模型到内存并提供下载
+                model_buffer = io.BytesIO()
+                pickle.dump(model, model_buffer)
+                model_buffer.seek(0)
+                st.download_button(
+                    label="下载模型",
+                    data=model_buffer,
+                    file_name=f"{model_name}_model.pkl",
+                    mime="application/octet-stream"
+                )
 
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
                 ax[0].scatter(y_train, train_pred, alpha=0.7)
@@ -143,15 +145,15 @@ elif option == "预测结果":
             st.write("预测结果：", df)
 
             # 下载结果
-            output_file = "predictions.xlsx"
-            df.to_excel(output_file, index=False)
-            with open(output_file, "rb") as f:
-                st.download_button(
-                    label="下载预测结果",
-                    data=f,
-                    file_name=output_file,
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+            output_buffer = io.BytesIO()
+            df.to_excel(output_buffer, index=False)
+            output_buffer.seek(0)
+            st.download_button(
+                label="下载预测结果",
+                data=output_buffer,
+                file_name="predictions.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
 elif option == "数据分析":
     st.title("数据分析工具")
