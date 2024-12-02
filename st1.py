@@ -61,6 +61,7 @@ if option == "训练模型":
                 y = y.dropna()
 
             normalize = st.radio("是否进行归一化处理", ["不归一化", "标准化 (StandardScaler)", "归一化 (MinMaxScaler)"])
+            scaler = None
             if normalize == "标准化 (StandardScaler)":
                 scaler = StandardScaler()
                 X = scaler.fit_transform(X)
@@ -101,8 +102,9 @@ if option == "训练模型":
                 st.write(f"测试集 R²: {r2_score(y_test, test_pred):.4f}")
 
                 # 保存模型到内存并提供下载
+                model_data = {"model": model, "scaler": scaler}  # 保存模型和归一化方法
                 model_buffer = io.BytesIO()
-                pickle.dump(model, model_buffer)
+                pickle.dump(model_data, model_buffer)
                 model_buffer.seek(0)
                 st.download_button(
                     label="下载模型",
@@ -132,15 +134,21 @@ elif option == "预测结果":
     data_file = st.file_uploader("上传待预测的数据集 (Excel 格式)", type=["xlsx", "xls"])
 
     if model_file and data_file:
-        model = pickle.load(model_file)
+        model_data = pickle.load(model_file)
+        model = model_data["model"]
+        scaler = model_data["scaler"]
         df = pd.read_excel(data_file)
         st.write("待预测数据集预览：", df.head())
 
         predict_features = st.multiselect("选择用于预测的特征列", df.columns)
         if predict_features:
             X = df[predict_features]
-            predictions = model.predict(X)
 
+            # 应用训练时相同的归一化或标准化方法
+            if scaler is not None:
+                X = scaler.transform(X)
+
+            predictions = model.predict(X)
             df["Predictions"] = predictions
             st.write("预测结果：", df)
 
