@@ -15,13 +15,12 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 import matplotlib.pyplot as plt
-from matplotlib import rcParams
 import seaborn as sns
 import io
 
-# 设置 Matplotlib 中文字体
-rcParams['font.sans-serif'] = ['SimHei']  # 替换为服务器上的中文字体
-rcParams['axes.unicode_minus'] = False   # 解决负号显示问题
+# 设置中文字体
+plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['axes.unicode_minus'] = False
 
 # 常见的回归模型
 models = {
@@ -115,15 +114,15 @@ if option == "训练模型":
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
                 ax[0].scatter(y_train, train_pred, alpha=0.7)
                 ax[0].plot([min(y_train), max(y_train)], [min(y_train), max(y_train)], color='red', linestyle='--')
-                ax[0].set_title("训练集：实际值 vs 预测值", fontdict={'fontsize': 14})
-                ax[0].set_xlabel("实际值", fontdict={'fontsize': 12})
-                ax[0].set_ylabel("预测值", fontdict={'fontsize': 12})
+                ax[0].set_title("Training: Actual vs Predicted")
+                ax[0].set_xlabel("Actual Values")
+                ax[0].set_ylabel("Predicted Values")
 
                 ax[1].scatter(y_test, test_pred, alpha=0.7, color='orange')
                 ax[1].plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--')
-                ax[1].set_title("测试集：实际值 vs 预测值", fontdict={'fontsize': 14})
-                ax[1].set_xlabel("实际值", fontdict={'fontsize': 12})
-                ax[1].set_ylabel("预测值", fontdict={'fontsize': 12})
+                ax[1].set_title("Testing: Actual vs Predicted")
+                ax[1].set_xlabel("Actual Values")
+                ax[1].set_ylabel("Predicted Values")
 
                 st.pyplot(fig)
 
